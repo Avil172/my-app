@@ -1,9 +1,14 @@
 # RTX 5090 price alerts (India)
 
 A GitHub Actions job (`.github/workflows/rtx5090-price-alert.yml`) checks RTX 5090
-listings every 3 hours. When an in-stock card is cheaper than the last price
-seen for that same listing, it opens a GitHub issue that @mentions you, and
-GitHub emails it to you. Nothing is sent otherwise.
+listings every 3 hours, including out-of-stock ones, and opens a GitHub issue
+that @mentions you (so GitHub emails it to you) when:
+
+- an out-of-stock card comes back in stock (**BACK IN STOCK**, with its price), or
+- an in-stock card drops below the last in-stock price seen for that listing
+  (**PRICE DROP**).
+
+Nothing is sent otherwise: no email for unchanged or higher prices.
 
 It runs on GitHub's free servers: no PC, no email password, no Claude usage.
 

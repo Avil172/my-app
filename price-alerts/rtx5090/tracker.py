@@ -1,7 +1,8 @@
 """RTX 5090 price tracker for Indian retailers.
 
 Checks each store, compares with the last saved state, and writes an alert
-when an in-stock listing gets cheaper than the last price seen. The GitHub workflow turns that alert into an issue that
+when an out-of-stock card comes back in stock, and after that whenever its
+price drops below the last in-stock price seen. The GitHub workflow turns that alert into an issue that
 @mentions the repo owner, so GitHub emails it to them. No email password needed.
 
 Environment:
@@ -214,14 +215,18 @@ def main():
     old = state["listings"]
 
     now, errors = collect()
-    # Only alert on a real drop: in stock now and cheaper than the last in-stock price
-    # we saw for the same listing (even if it was out of stock in between).
+    # Alert when a card comes (back) in stock, and after that only when its price drops
+    # below the last in-stock price seen for the same listing.
     alerts = []
     for url, item in now.items():
-        prev = old.get(url) or {}
-        last = prev.get("last_price") or (prev.get("price") if prev.get("in_stock") else None)
+        prev = old.get(url)
+        last = prev and (prev.get("last_price") or (prev["price"] if prev["in_stock"] else None))
         if item["in_stock"]:
-            if last and item["price"] < last:
+            was_in_stock = prev and prev["in_stock"]
+            if old and not was_in_stock:
+                note = f" (last in-stock price {fmt(last)})" if last else ""
+                alerts.append(f"BACK IN STOCK at {fmt(item['price'])}{note} | {item['store']} | {item['title']}\n  {url}")
+            elif last and item["price"] < last:
                 alerts.append(f"PRICE DROP {fmt(last)} -> {fmt(item['price'])} "
                               f"(-{fmt(last - item['price'])}) | {item['store']} | {item['title']}\n  {url}")
             item["last_price"] = item["price"]
