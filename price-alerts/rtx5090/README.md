@@ -20,7 +20,7 @@ It runs on GitHub's free servers: no PC, no email password, no Claude usage.
 | Online King (Bangalore) | Store's own product API (JSON) | Good |
 | NVIDIA Founders Edition (official India store) | WooCommerce product API (JSON) | Good |
 | PrimeABGB | WooCommerce product API (JSON) | Blocks GitHub's servers at times |
-| PC Studio | WooCommerce product API (JSON) | Good |
+| PC Studio | WooCommerce product API (JSON) | Blocks GitHub's servers at times |
 | EZPZ Solutions | WooCommerce product API (JSON) | Good |
 | EliteHubs | Shopify collection (JSON) | Good |
 | Vishal Peripherals | Shopify collection (JSON) | Good |
