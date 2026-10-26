@@ -258,9 +258,9 @@ def main():
         elif last:
             item["last_price"] = last
 
-    # Keep listings from stores that failed this run so they don't look "new" next time.
-    failed = set(errors)
-    merged = {u: i for u, i in old.items() if i["store"] in failed}
+    # Keep listings not seen this run (store failed, or search results shuffled) so a
+    # card that briefly drops out of results doesn't look "back in stock" later.
+    merged = dict(old)
     merged.update(now)
     state = {"updated": datetime.now(IST).isoformat(timespec="minutes"), "listings": merged}
     STATE_FILE.write_text(json.dumps(state, indent=1, ensure_ascii=False, sort_keys=True) + "\n")
