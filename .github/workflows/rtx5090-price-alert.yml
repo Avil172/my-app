@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       send_summary:
-        description: "Email the current price list even if nothing changed"
+        description: "Test: email the current price list even if no price dropped"
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: read
@@ -40,10 +40,9 @@ jobs:
 
       - run: pip install -r price-alerts/rtx5090/requirements.txt
 
-      - name: Check prices and email alerts
+      - name: Check prices for drops
         env:
           ALERT_DIR: ${{ runner.temp }}/alert
-          TARGET_PRICE: ${{ vars.TARGET_PRICE }}
           SEND_SUMMARY: ${{ github.event_name == 'workflow_dispatch' && inputs.send_summary && '1' || '0' }}
         run: python price-alerts/rtx5090/tracker.py
 

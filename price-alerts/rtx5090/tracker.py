@@ -1,12 +1,10 @@
 """RTX 5090 price tracker for Indian retailers.
 
 Checks each store, compares with the last saved state, and writes an alert
-when an in-stock listing gets cheaper, comes back in stock, or hits the
-target price. The GitHub workflow turns that alert into an issue that
+when an in-stock listing gets cheaper than the last price seen. The GitHub workflow turns that alert into an issue that
 @mentions the repo owner, so GitHub emails it to them. No email password needed.
 
 Environment:
-  TARGET_PRICE        optional, overrides target_price in config.json
   SEND_SUMMARY=1      write the full price list even if nothing changed
   ALERT_DIR           where to write alert_title.txt / alert_body.md (default: print only)
 """
@@ -214,24 +212,21 @@ def fmt(p):
 def main():
     state = json.loads(STATE_FILE.read_text()) if STATE_FILE.exists() else {"listings": {}}
     old = state["listings"]
-    target = os.environ.get("TARGET_PRICE") or CONFIG.get("target_price")
-    target = int(target) if target else None
 
     now, errors = collect()
+    # Only alert on a real drop: in stock now and cheaper than the last in-stock price
+    # we saw for the same listing (even if it was out of stock in between).
     alerts = []
     for url, item in now.items():
-        prev = old.get(url)
-        if not item["in_stock"]:
-            continue
-        if prev and prev["in_stock"] and item["price"] < prev["price"]:
-            alerts.append(f"PRICE DROP {fmt(prev['price'])} -> {fmt(item['price'])} "
-                          f"(-{fmt(prev['price'] - item['price'])}) | {item['store']} | {item['title']}\n  {url}")
-        elif prev and not prev["in_stock"]:
-            alerts.append(f"BACK IN STOCK at {fmt(item['price'])} | {item['store']} | {item['title']}\n  {url}")
-        elif not prev and old:
-            alerts.append(f"NEW LISTING at {fmt(item['price'])} | {item['store']} | {item['title']}\n  {url}")
-        if target and item["price"] <= target and not (prev and prev.get("in_stock") and prev["price"] <= target):
-            alerts.append(f"BELOW TARGET {fmt(target)}: {fmt(item['price'])} | {item['store']} | {item['title']}\n  {url}")
+        prev = old.get(url) or {}
+        last = prev.get("last_price") or (prev.get("price") if prev.get("in_stock") else None)
+        if item["in_stock"]:
+            if last and item["price"] < last:
+                alerts.append(f"PRICE DROP {fmt(last)} -> {fmt(item['price'])} "
+                              f"(-{fmt(last - item['price'])}) | {item['store']} | {item['title']}\n  {url}")
+            item["last_price"] = item["price"]
+        elif last:
+            item["last_price"] = last
 
     # Keep listings from stores that failed this run so they don't look "new" next time.
     failed = set(errors)

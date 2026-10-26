@@ -17,7 +17,6 @@
   ],
   "min_sane_price": 200000,
   "max_sane_price": 1500000,
-  "target_price": null,
   "stores": {
     "primeabgb": true,
     "vedant": true,
