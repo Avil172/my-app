@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: rtx5090-price-alert
@@ -41,12 +42,23 @@ jobs:
 
       - name: Check prices and email alerts
         env:
-          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          ALERT_TO: ${{ vars.ALERT_TO }}
+          ALERT_DIR: ${{ runner.temp }}/alert
           TARGET_PRICE: ${{ vars.TARGET_PRICE }}
           SEND_SUMMARY: ${{ github.event_name == 'workflow_dispatch' && inputs.send_summary && '1' || '0' }}
         run: python price-alerts/rtx5090/tracker.py
+
+      # Opening an issue that @mentions the owner makes GitHub email them the alert.
+      - name: Open alert issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALERT_DIR: ${{ runner.temp }}/alert
+          OWNER: ${{ vars.ALERT_MENTION || github.repository_owner }}
+        run: |
+          [ -f "$ALERT_DIR/alert_title.txt" ] || { echo "No alert this run."; exit 0; }
+          { echo "@$OWNER"; echo; cat "$ALERT_DIR/alert_body.md"; } > "$ALERT_DIR/issue.md"
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "$(cat "$ALERT_DIR/alert_title.txt")" \
+            --body-file "$ALERT_DIR/issue.md"
 
       - name: Save price history
         if: always() && hashFiles('price-alerts/rtx5090/state.json') != ''

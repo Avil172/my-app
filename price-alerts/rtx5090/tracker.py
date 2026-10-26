@@ -1,26 +1,21 @@
 """RTX 5090 price tracker for Indian retailers.
 
-Checks each store, compares with the last saved state, and emails an alert
+Checks each store, compares with the last saved state, and writes an alert
 when an in-stock listing gets cheaper, comes back in stock, or hits the
-target price. Meant to run on a schedule from GitHub Actions.
+target price. The GitHub workflow turns that alert into an issue that
+@mentions the repo owner, so GitHub emails it to them. No email password needed.
 
 Environment:
-  GMAIL_ADDRESS       Gmail account that sends (and receives) the alerts
-  GMAIL_APP_PASSWORD  Gmail App Password for that account
-  ALERT_TO            optional, comma-separated recipients (default: GMAIL_ADDRESS)
   TARGET_PRICE        optional, overrides target_price in config.json
-  SEND_SUMMARY=1      email the full price list even if nothing changed
-  DRY_RUN=1           print the email instead of sending it
+  SEND_SUMMARY=1      write the full price list even if nothing changed
+  ALERT_DIR           where to write alert_title.txt / alert_body.md (default: print only)
 """
 
 import json
 import os
 import re
-import smtplib
-import sys
 import time
 from datetime import datetime, timezone, timedelta
-from email.mime.text import MIMEText
 from pathlib import Path
 from urllib.parse import quote_plus, urljoin
 
@@ -267,19 +262,14 @@ def main():
 
 
 def send_email(subject, body):
-    if os.environ.get("DRY_RUN") == "1":
-        print(f"--- DRY RUN ---\nSubject: {subject}\n\n{body}")
-        return
-    user, pw = os.environ.get("GMAIL_ADDRESS"), os.environ.get("GMAIL_APP_PASSWORD")
-    if not user or not pw:
-        sys.exit("GMAIL_ADDRESS and GMAIL_APP_PASSWORD secrets are not set.")
-    to = [a.strip() for a in (os.environ.get("ALERT_TO") or user).split(",") if a.strip()]
-    msg = MIMEText(body, "plain", "utf-8")
-    msg["Subject"], msg["From"], msg["To"] = subject, user, ", ".join(to)
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
-        s.login(user, pw.replace(" ", ""))
-        s.sendmail(user, to, msg.as_string())
-    print(f"Email sent to {', '.join(to)}: {subject}")
+    print(f"Subject: {subject}\n\n{body}")
+    out = os.environ.get("ALERT_DIR")
+    if out:
+        Path(out).mkdir(parents=True, exist_ok=True)
+        (Path(out) / "alert_title.txt").write_text(subject)
+        # Markdown: hard line breaks so the plain-text layout survives in the issue/email.
+        md = "  \n".join(line.strip() for line in body.splitlines())
+        (Path(out) / "alert_body.md").write_text(md + "\n")
 
 
 if __name__ == "__main__":
