@@ -13,7 +13,10 @@
     "waterblock",
     "water block",
     "backplate",
-    "riser"
+    "riser",
+    "barebone",
+    "ssd",
+    "nvme"
   ],
   "min_sane_price": 200000,
   "max_sane_price": 1500000,
@@ -24,6 +27,10 @@
     "vishal": true,
     "aashirwad": true,
     "onlineking": true,
+    "nvidia_fe": true,
+    "pcstudio": true,
+    "ezpz": true,
+    "computech": true,
     "flipkart": true,
     "amazon": true
   }

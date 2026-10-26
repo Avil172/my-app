@@ -118,6 +118,26 @@ def vedant():
     return out
 
 
+def computech():
+    soup = BeautifulSoup(get("https://computechstore.in/search", params={"q": "rtx 5090"}).text, "html.parser")
+    out, seen = [], set()
+    for a in soup.select("a[href*='/product/']"):
+        title = a.get_text(" ", strip=True)
+        if "5090" not in title or a["href"] in seen:
+            continue
+        seen.add(a["href"])
+        card = a
+        while card.parent is not None and "\u20b9" not in card.get_text():
+            card = card.parent
+        text = card.get_text(" ", strip=True)
+        prices = [rupees(m) for m in re.findall(r"\u20b9\s?[\d,]+", text)]
+        if prices:
+            out.append({"title": title, "price": min(prices),  # MRP is listed next to the selling price
+                        "url": urljoin("https://computechstore.in", a["href"]),
+                        "in_stock": not re.search(r"sold out|out of stock", text, re.I)})
+    return out
+
+
 def flipkart():
     url = "https://www.flipkart.com/search?q=" + quote_plus("nvidia geforce rtx 5090 graphics card")
     soup = BeautifulSoup(get(url).text, "html.parser")
@@ -172,6 +192,10 @@ STORES = {
     "vishal": ("Vishal Peripherals", lambda: shopify_collection("https://vishalperipherals.com", "rtx-5090")),
     "aashirwad": ("Aashirwad Computers (SP Road, Bangalore)", lambda: woocommerce("https://aashirwadcomputers.in")),
     "onlineking": ("Online King (Bangalore)", onlineking),
+    "nvidia_fe": ("NVIDIA Founders Edition (official India store)", lambda: woocommerce("https://nvidia.onlinestpl.co.in", "5090")),
+    "pcstudio": ("PC Studio", lambda: woocommerce("https://www.pcstudio.in", "5090")),
+    "ezpz": ("EZPZ Solutions", lambda: woocommerce("https://ezpzsolutions.in", "5090")),
+    "computech": ("Computech Store", computech),
     "flipkart": ("Flipkart", flipkart),
     "amazon": ("Amazon.in", amazon),
 }

@@ -18,14 +18,19 @@ It runs on GitHub's free servers: no PC, no email password, no Claude usage.
 |---|---|---|
 | Aashirwad Computers (SP Road, Bangalore, walk-in) | WooCommerce product API (JSON) | Good |
 | Online King (Bangalore) | Store's own product API (JSON) | Good |
-| PrimeABGB | WooCommerce product API (JSON) | Good |
+| NVIDIA Founders Edition (official India store) | WooCommerce product API (JSON) | Good |
+| PrimeABGB | WooCommerce product API (JSON) | Blocks GitHub's servers at times |
+| PC Studio | WooCommerce product API (JSON) | Good |
+| EZPZ Solutions | WooCommerce product API (JSON) | Good |
 | EliteHubs | Shopify collection (JSON) | Good |
 | Vishal Peripherals | Shopify collection (JSON) | Good |
 | Vedant Computers | Search page HTML | Good |
+| Computech Store | Search page HTML | Good |
 | Flipkart | Search page HTML | OK, layout changes can break it |
 | Amazon.in | Search page HTML | Best effort, often blocks cloud servers |
 
-MD Computers is not included: it blocks automated requests (Cloudflare).
+Not included because they block automated requests: MD Computers, ServerBasket,
+GameLoot. Checked but no 5090 listings: TheITDepot, Clarion, PC Planet, TLG Gaming.
 Listings below ₹2L or above ₹15L are ignored as placeholders, along with
 laptops, prebuilt PCs and accessories. Tune these in `config.json`, where
 each store can also be switched off.
