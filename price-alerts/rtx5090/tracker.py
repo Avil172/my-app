@@ -242,12 +242,13 @@ def main():
     # Alert when a card comes (back) in stock, and after that only when its price drops
     # below the last in-stock price seen for the same listing.
     alerts = []
+    known_stores = {i["store"] for i in old.values()}  # a newly added store starts as a silent baseline
     for url, item in now.items():
         prev = old.get(url)
         last = prev and (prev.get("last_price") or (prev["price"] if prev["in_stock"] else None))
         if item["in_stock"]:
             was_in_stock = prev and prev["in_stock"]
-            if old and not was_in_stock:
+            if item["store"] in known_stores and not was_in_stock:
                 note = f" (last in-stock price {fmt(last)})" if last else ""
                 alerts.append(f"BACK IN STOCK at {fmt(item['price'])}{note} | {item['store']} | {item['title']}\n  {url}")
             elif last and item["price"] < last:
