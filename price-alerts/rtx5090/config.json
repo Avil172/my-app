@@ -1,0 +1,31 @@
+{
+  "product_name": "NVIDIA GeForce RTX 5090",
+  "match_regex": "rtx\\s*-?\\s*5090(?!\\s*d)",
+  "exclude_words": [
+    "laptop",
+    "notebook",
+    "pc build",
+    "custom pc",
+    "desktop",
+    "prebuilt",
+    "bracket",
+    "cable",
+    "waterblock",
+    "water block",
+    "backplate",
+    "riser"
+  ],
+  "min_sane_price": 200000,
+  "max_sane_price": 1500000,
+  "target_price": null,
+  "stores": {
+    "primeabgb": true,
+    "vedant": true,
+    "elitehubs": true,
+    "vishal": true,
+    "aashirwad": true,
+    "onlineking": true,
+    "flipkart": true,
+    "amazon": true
+  }
+}

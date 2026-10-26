@@ -1,0 +1,56 @@
+name: RTX 5090 price alert
+
+on:
+  schedule:
+    # Every 3 hours (times are UTC). GitHub may delay scheduled runs by a few minutes.
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      send_summary:
+        description: "Email the current price list even if nothing changed"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rtx5090-price-alert
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Last seen prices live in the Actions cache, so the job never commits to the repo.
+      - name: Restore price history
+        uses: actions/cache/restore@v4
+        with:
+          path: price-alerts/rtx5090/state.json
+          key: rtx5090-state-${{ github.run_id }}
+          restore-keys: rtx5090-state-
+
+      - run: pip install -r price-alerts/rtx5090/requirements.txt
+
+      - name: Check prices and email alerts
+        env:
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          ALERT_TO: ${{ vars.ALERT_TO }}
+          TARGET_PRICE: ${{ vars.TARGET_PRICE }}
+          SEND_SUMMARY: ${{ github.event_name == 'workflow_dispatch' && inputs.send_summary && '1' || '0' }}
+        run: python price-alerts/rtx5090/tracker.py
+
+      - name: Save price history
+        if: always() && hashFiles('price-alerts/rtx5090/state.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: price-alerts/rtx5090/state.json
+          key: rtx5090-state-${{ github.run_id }}
